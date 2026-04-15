@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Central de Ocorrências - DKRLI{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="dashboard-body">
+    {% if user.is_authenticated %}
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <img src="https://i.postimg.cc/hGCydSSw/Logo-DKRLI.png" alt="DKRLI" class="navbar-logo">
+            <div class="navbar-sep"></div>
+            <span class="navbar-app-name">Central de Ocorrências</span>
+        </div>
+        <div class="navbar-clock">
+            <span class="clock-time" id="live-clock">--:--:--</span>
+            <span class="clock-date" id="live-date">---</span>
+        </div>
+        <div class="navbar-right">
+            {% if user.is_superuser %}
+            <a href="{% url 'usuarios' %}" class="btn-logout">
+                <i class="fa fa-users"></i> Usuários
+            </a>
+            {% endif %}
+            <div class="user-pill">
+                <div class="user-avatar">{{ user.username|slice:":2" }}</div>
+                <span class="user-name">{{ user.username }}</span>
+            </div>
+            <a href="{% url 'logout' %}" class="btn-logout">
+                <i class="fa fa-right-from-bracket"></i> Sair
+            </a>
+        </div>
+    </nav>
+    {% endif %}
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block extra_js %}{% endblock %}
+
+    {% if user.is_authenticated %}
+    <script>
+        (function () {
+            const dias = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+            const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+            function pad(n){ return String(n).padStart(2,'0'); }
+            function tick(){
+                const d = new Date();
+                const clockEl = document.getElementById('live-clock');
+                const dateEl  = document.getElementById('live-date');
+                if(clockEl) clockEl.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+                if(dateEl)  dateEl.textContent  = `${dias[d.getDay()]}, ${pad(d.getDate())} ${meses[d.getMonth()]} ${d.getFullYear()}`;
+            }
+            tick();
+            setInterval(tick, 1000);
+        })();
+    </script>
+    {% endif %}
+</body>
+</html>

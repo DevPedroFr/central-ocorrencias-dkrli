@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Central de Ocorrências DKRLI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="login-body">
+
+<div class="login-root">
+
+    <!-- ── Left brand panel ─────────────────────────────── -->
+    <div class="login-left">
+        <div class="login-left-top">
+            <img src="https://i.postimg.cc/hGCydSSw/Logo-DKRLI.png" alt="DKRLI" class="login-brand-logo">
+            <h1 class="login-tagline">Central de<br>Ocorrências</h1>
+            <p class="login-desc">
+                Registre, monitore e encerre ocorrências operacionais em tempo real com confirmação automática por minuto.
+            </p>
+            <div class="login-features">
+                <div class="login-feature">
+                    <div class="login-feature-icon"><i class="fa fa-clock"></i></div>
+                    Contador em tempo real por ocorrência
+                </div>
+                <div class="login-feature">
+                    <div class="login-feature-icon"><i class="fa fa-bell"></i></div>
+                    Alerta de confirmação da ocorrência
+                </div>
+                <div class="login-feature">
+                    <div class="login-feature-icon"><i class="fa fa-circle-check"></i></div>
+                    Histórico de ocorrências encerradas
+                </div>
+            </div>
+        </div>
+        <div class="login-left-bottom">
+            &copy; 2026 DKRLI — Todos os direitos reservados
+        </div>
+    </div>
+
+    <!-- ── Right form panel ─────────────────────────────── -->
+    <div class="login-right">
+        <div class="login-form-wrap">
+
+            <div class="login-greeting">
+                <h2 class="login-greeting-title">Bem-vindo de volta</h2>
+                <p class="login-greeting-sub">Faça login para acessar o painel de ocorrências</p>
+            </div>
+
+            {% if error %}
+            <div class="login-error">
+                <i class="fa fa-circle-exclamation"></i>
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="field">
+                    <label class="field-label" for="username">
+                        <i class="fa fa-user"></i> Usuário
+                    </label>
+                    <input
+                        type="text" id="username" name="username"
+                        class="field-input" placeholder="Digite seu usuário"
+                        required autofocus autocomplete="username"
+                    >
+                </div>
+                <div class="field">
+                    <label class="field-label" for="password">
+                        <i class="fa fa-lock"></i> Senha
+                    </label>
+                    <div class="pw-wrap">
+                        <input
+                            type="password" id="password" name="password"
+                            class="field-input" placeholder="Digite sua senha"
+                            required autocomplete="current-password"
+                        >
+                        <button type="button" class="pw-toggle" tabindex="-1" onclick="togglePwd()">
+                            <i class="fa fa-eye" id="pwd-icon"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="btn-login">
+                    <i class="fa fa-right-to-bracket"></i> Entrar
+                </button>
+            </form>
+
+            <p class="login-footer">&copy; 2026 DKRLI</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function togglePwd() {
+        const pwd  = document.getElementById('password');
+        const icon = document.getElementById('pwd-icon');
+        if (pwd.type === 'password') {
+            pwd.type = 'text';
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            pwd.type = 'password';
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard — Central de Ocorrências{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <h2 class="page-title">Dashboard</h2>
+        <p class="page-subtitle">Monitoramento em tempo real das ocorrências</p>
+    </div>
+    <button class="btn-primary" onclick="openModal()">
+        <i class="fa fa-plus"></i> Nova Ocorrência
+    </button>
+</div>
+
+<div class="stats-strip">
+    <div class="stat-tile tile-open">
+        <div class="stat-tile-icon"><i class="fa fa-triangle-exclamation"></i></div>
+        <div class="stat-tile-body">
+            <span class="stat-tile-num" id="count-abertas">{{ ocorrencias_abertas.count }}</span>
+            <span class="stat-tile-lbl">Abertas</span>
+        </div>
+    </div>
+    <div class="stat-tile tile-closed">
+        <div class="stat-tile-icon"><i class="fa fa-circle-check"></i></div>
+        <div class="stat-tile-body">
+            <span class="stat-tile-num">{{ ocorrencias_fechadas.count }}</span>
+            <span class="stat-tile-lbl">Fechadas Recentes</span>
+        </div>
+    </div>
+</div>
+
+<section class="section">
+    <div class="section-head">
+        <span class="pulse-dot"></span>
+        <h3 class="section-head-title">Ocorrências Abertas</h3>
+        {% if ocorrencias_abertas %}
+        <span class="pill-count">{{ ocorrencias_abertas.count }}</span>
+        {% endif %}
+    </div>
+
+    {% if ocorrencias_abertas %}
+    <div class="cards-grid" id="cards-abertas">
+        {% for o in ocorrencias_abertas %}
+        <div class="occ-card occ-open" id="card-{{ o.id }}" data-id="{{ o.id }}"
+             data-criado="{{ o.criado_em.isoformat }}">
+
+            <div class="occ-card-top">
+                <span class="status-chip chip-open">
+                    <i class="fa fa-circle" style="font-size:.45rem"></i> Aberta
+                </span>
+                <span class="occ-timer" id="timer-{{ o.id }}">
+                    <i class="fa fa-clock"></i> --:--:--
+                </span>
+            </div>
+
+            <div class="occ-card-body">
+                <h4 class="occ-title">{{ o.titulo }}</h4>
+                <span class="occ-location">
+                    <i class="fa fa-location-dot"></i> {{ o.local }}
+                </span>
+                <p class="occ-desc">{{ o.descricao }}</p>
+                <div class="occ-meta">
+                    <span><i class="fa fa-user"></i> {{ o.criado_por.username }}</span>
+                    <span><i class="fa fa-calendar"></i> {{ o.criado_em|date:"d/m/Y H:i" }}</span>
+                </div>
+            </div>
+
+            <div class="occ-card-foot">
+                <button class="btn-close-occ" onclick="fecharOcorrencia({{ o.id }})">
+                    <i class="fa fa-circle-xmark"></i> Encerrar ocorrência
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-box">
+        <div class="empty-box-icon"><i class="fa fa-shield-halved"></i></div>
+        <p class="empty-box-title">Nenhuma ocorrência aberta</p>
+        <p class="empty-box-sub">Clique em <strong>Nova Ocorrência</strong> para registrar uma.</p>
+    </div>
+    {% endif %}
+</section>
+
+{% if ocorrencias_fechadas %}
+<section class="section">
+    <div class="section-head">
+        <span class="gray-dot"></span>
+        <h3 class="section-head-title">Ocorrências Encerradas Recentes</h3>
+    </div>
+    <div class="cards-grid">
+        {% for o in ocorrencias_fechadas %}
+        <div class="occ-card occ-closed">
+            <div class="occ-card-top">
+                <span class="status-chip chip-closed">
+                    <i class="fa fa-circle" style="font-size:.45rem"></i> Encerrada
+                </span>
+                {% if o.fechado_em %}
+                <span class="occ-duration">
+                    <i class="fa fa-hourglass-end"></i>
+                    {{ o.criado_em|timesince:o.fechado_em }}
+                </span>
+                {% endif %}
+            </div>
+            <div class="occ-card-body">
+                <h4 class="occ-title">{{ o.titulo }}</h4>
+                <span class="occ-location">
+                    <i class="fa fa-location-dot"></i> {{ o.local }}
+                </span>
+                <p class="occ-desc">{{ o.descricao }}</p>
+                <div class="occ-meta">
+                    <span><i class="fa fa-user"></i> {{ o.criado_por.username }}</span>
+                    <span><i class="fa fa-calendar-check"></i> {{ o.fechado_em|date:"d/m/Y H:i" }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<div class="modal-backdrop" id="modal-backdrop" onclick="closeModal(event)" style="display:none;">
+    <div class="modal-panel">
+        <div class="modal-head">
+            <span class="modal-head-title">
+                <i class="fa fa-plus-circle"></i> Nova Ocorrência
+            </span>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'nova_ocorrencia' %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="field">
+                    <label class="field-label"><i class="fa fa-tag"></i> Título</label>
+                    <input type="text" name="titulo" class="field-input"
+                           placeholder="Ex: Falha no sistema de acesso" required maxlength="200">
+                </div>
+                <div class="field">
+                    <label class="field-label"><i class="fa fa-location-dot"></i> Dispositivo</label>
+                    <input type="text" name="local" class="field-input"
+                           placeholder="Ex: Telefone 3cx" required maxlength="200">
+                </div>
+                <div class="field">
+                    <label class="field-label"><i class="fa fa-align-left"></i> Descrição</label>
+                    <textarea name="descricao" class="field-input" rows="4"
+                              placeholder="Descreva detalhes da ocorrência..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button type="button" class="btn-ghost" onclick="closeModal()">Cancelar</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fa fa-save"></i> Registrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ── Modal controls ──────────────────────────────────────────────
+    function openModal() {
+        document.getElementById('modal-backdrop').style.display = 'flex';
+    }
+    function closeModal(event) {
+        if (!event || event.target === document.getElementById('modal-backdrop')) {
+            document.getElementById('modal-backdrop').style.display = 'none';
+        }
+    }
+
+    // ── Timer & minute confirmation ─────────────────────────────────
+    function formatDuration(total) {
+        const h = Math.floor(total / 3600);
+        const m = Math.floor((total % 3600) / 60);
+        const s = total % 60;
+        return [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+    }
+
+    const cards = document.querySelectorAll('.occ-card.occ-open');
+
+    function updateTimers() {
+        const now = Date.now();
+        cards.forEach(card => {
+            const id = card.dataset.id;
+            const elapsed = Math.floor((now - new Date(card.dataset.criado)) / 1000);
+            const el = document.getElementById('timer-' + id);
+            if (el) el.innerHTML = '<i class="fa fa-clock"></i> ' + formatDuration(elapsed);
+
+            // Every full minute → notify Teams
+            if (elapsed > 0 && elapsed % 60 === 0) {
+                fetch('/notificar-teams/' + id + '/', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCsrf() }
+                });
+            }
+        });
+    }
+    setInterval(updateTimers, 1000);
+    updateTimers();
+
+    // ── API calls ───────────────────────────────────────────────────
+    function getCsrf() {
+        return document.cookie.split(';')
+            .map(c => c.trim()).find(c => c.startsWith('csrftoken='))?.split('=')[1] || '';
+    }
+
+    function fecharOcorrencia(id) {
+        fetch('/fechar/' + id + '/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrf() }
+        }).then(r => r.json()).then(() => {
+            const card = document.getElementById('card-' + id);
+            if (card) {
+                card.classList.add('is-removing');
+                setTimeout(() => { card.remove(); updateStatCount(); }, 400);
+            }
+            showToast('Ocorrência encerrada com sucesso.', 'success');
+        });
+    }
+
+    function updateStatCount() {
+        const remaining = document.querySelectorAll('.occ-card.occ-open:not(.is-removing)').length;
+        const numEl = document.getElementById('count-abertas');
+        if (numEl) numEl.textContent = remaining;
+        if (remaining === 0) {
+            const grid = document.getElementById('cards-abertas');
+            if (grid) {
+                grid.outerHTML = '<div class="empty-box"><div class="empty-box-icon"><i class="fa fa-shield-halved"></i></div><p class="empty-box-title">Nenhuma ocorrência aberta</p><p class="empty-box-sub">Todas as ocorrências foram encerradas.</p></div>';
+            }
+        }
+    }
+
+    // ── Toast ───────────────────────────────────────────────────────
+    function showToast(msg, type) {
+        const t = document.createElement('div');
+        t.className = 'toast toast-' + (type || 'info');
+        t.innerHTML = '<i class="fa fa-' + (type === 'success' ? 'circle-check' : 'circle-info') + '"></i> ' + msg;
+        document.body.appendChild(t);
+        requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+        setTimeout(() => {
+            t.classList.remove('show');
+            setTimeout(() => t.remove(), 300);
+        }, 3200);
+    }
+</script>
+{% endblock %}

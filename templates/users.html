@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Usuários — Central de Ocorrências{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <h2 class="page-title">Gerenciamento de Usuários</h2>
+        <p class="page-subtitle">Visualize e redefina senhas dos usuários do sistema</p>
+    </div>
+    <a href="{% url 'dashboard' %}" class="btn-ghost">
+        <i class="fa fa-arrow-left"></i> Voltar ao Dashboard
+    </a>
+</div>
+
+<!-- Stats -->
+<div class="stats-strip">
+    <div class="stat-tile tile-open">
+        <div class="stat-tile-icon"><i class="fa fa-users"></i></div>
+        <div class="stat-tile-body">
+            <span class="stat-tile-num">{{ users_data|length }}</span>
+            <span class="stat-tile-lbl">Total</span>
+        </div>
+    </div>
+    <div class="stat-tile tile-closed">
+        <div class="stat-tile-icon"><i class="fa fa-user-shield"></i></div>
+        <div class="stat-tile-body">
+            <span class="stat-tile-num">{% with supercount=0 %}{% for u in users_data %}{% if u.is_superuser %}{% with supercount=supercount|add:1 %}{% endwith %}{% endif %}{% endfor %}{{ users_data|length }}{% endwith %}</span>
+            <span class="stat-tile-lbl">Superadmins</span>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<section class="section">
+    <div class="section-head">
+        <span class="gray-dot"></span>
+        <h3 class="section-head-title">Usuários Cadastrados</h3>
+        <span class="pill-count" style="background:var(--c-50);color:var(--c-600);">{{ users_data|length }}</span>
+    </div>
+
+    <div style="background:var(--white);border-radius:var(--r);border:1px solid var(--n-200);box-shadow:var(--s-xs);overflow:hidden;">
+        <!-- Header -->
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:1rem;padding:.625rem 1.25rem;background:var(--n-50);border-bottom:1px solid var(--n-200);">
+            <span style="font-size:.6875rem;font-weight:700;color:var(--n-500);letter-spacing:.06em;text-transform:uppercase;">Usuário</span>
+            <span style="font-size:.6875rem;font-weight:700;color:var(--n-500);letter-spacing:.06em;text-transform:uppercase;">Tipo</span>
+            <span style="font-size:.6875rem;font-weight:700;color:var(--n-500);letter-spacing:.06em;text-transform:uppercase;">Status</span>
+            <span style="font-size:.6875rem;font-weight:700;color:var(--n-500);letter-spacing:.06em;text-transform:uppercase;">Ações</span>
+        </div>
+
+        {% for u in users_data %}
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:1rem;padding:.875rem 1.25rem;align-items:center;border-bottom:{% if not forloop.last %}1px solid var(--n-200){% else %}none{% endif %};">
+
+            <!-- Username -->
+            <div style="display:flex;align-items:center;gap:.75rem;">
+                <div style="width:34px;height:34px;border-radius:50%;background:{% if u.is_superuser %}linear-gradient(135deg,var(--c-600),var(--c-400)){% else %}linear-gradient(135deg,var(--n-500),var(--n-300)){% endif %};display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:white;text-transform:uppercase;flex-shrink:0;">
+                    {{ u.username|slice:":2" }}
+                </div>
+                <div>
+                    <div style="font-size:.875rem;font-weight:600;color:var(--n-900);">{{ u.username }}</div>
+                    {% if u.last_login %}
+                    <div style="font-size:.6875rem;color:var(--n-500);">Último login: {{ u.last_login|date:"d/m/Y H:i" }}</div>
+                    {% else %}
+                    <div style="font-size:.6875rem;color:var(--n-300);">Nunca acessou</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Type -->
+            <div>
+                {% if u.is_superuser %}
+                <span class="status-chip" style="background:var(--c-50);color:var(--c-600);border:1px solid var(--c-100);">
+                    <i class="fa fa-shield-halved" style="font-size:.6rem;"></i> Superadmin
+                </span>
+                {% else %}
+                <span class="status-chip chip-closed">
+                    <i class="fa fa-user" style="font-size:.6rem;"></i> Usuário
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- Status -->
+            <div>
+                {% if u.must_change_password %}
+                <span class="status-chip chip-open">
+                    <i class="fa fa-circle" style="font-size:.45rem;"></i> Trocar Senha
+                </span>
+                {% else %}
+                <span class="status-chip chip-closed" style="background:var(--green-bg);color:var(--green);border:1px solid #bbf7d0;">
+                    <i class="fa fa-circle" style="font-size:.45rem;"></i> Ativo
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div>
+                <button class="btn-ghost" style="font-size:.75rem;padding:.35rem .75rem;"
+                        onclick="openResetModal({{ u.id }}, '{{ u.username }}')">
+                    <i class="fa fa-key"></i> Redefinir Senha
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <p style="font-size:.75rem;color:var(--n-500);margin-top:.75rem;display:flex;align-items:center;gap:.375rem;">
+        <i class="fa fa-circle-info" style="color:var(--n-300);"></i>
+        As senhas são armazenadas de forma criptografada e não podem ser visualizadas. Use "Redefinir Senha" para definir uma nova senha para o usuário — ele será obrigado a trocá-la no próximo login.
+    </p>
+</section>
+
+<!-- Reset Password Modal -->
+<div class="modal-backdrop" id="reset-modal" onclick="closeResetModal(event)" style="display:none;">
+    <div class="modal-panel">
+        <div class="modal-head">
+            <span class="modal-head-title">
+                <i class="fa fa-key"></i> Redefinir Senha
+            </span>
+            <button class="modal-close" onclick="closeResetModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:.875rem;color:var(--n-700);margin-bottom:1.25rem;">
+                Definindo nova senha para: <strong id="modal-username"></strong>
+            </p>
+            <div class="field">
+                <label class="field-label"><i class="fa fa-lock"></i> Nova Senha</label>
+                <div class="pw-wrap">
+                    <input type="password" id="reset-password" class="field-input"
+                           placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                    <button type="button" class="pw-toggle" tabindex="-1" onclick="toggleResetPwd()">
+                        <i class="fa fa-eye" id="reset-icon"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="reset-error" style="display:none;" class="login-error"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn-ghost" onclick="closeResetModal()">Cancelar</button>
+            <button class="btn-primary" onclick="submitReset()">
+                <i class="fa fa-check"></i> Salvar
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentUserId = null;
+
+    function openResetModal(userId, username) {
+        currentUserId = userId;
+        document.getElementById('modal-username').textContent = username;
+        document.getElementById('reset-password').value = '';
+        document.getElementById('reset-error').style.display = 'none';
+        document.getElementById('reset-modal').style.display = 'flex';
+        setTimeout(() => document.getElementById('reset-password').focus(), 100);
+    }
+
+    function closeResetModal(event) {
+        if (!event || event.target === document.getElementById('reset-modal')) {
+            document.getElementById('reset-modal').style.display = 'none';
+            currentUserId = null;
+        }
+    }
+
+    function toggleResetPwd() {
+        const f = document.getElementById('reset-password');
+        const i = document.getElementById('reset-icon');
+        if (f.type === 'password') {
+            f.type = 'text';
+            i.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            f.type = 'password';
+            i.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    }
+
+    function getCsrf() {
+        return document.cookie.split(';')
+            .map(c => c.trim()).find(c => c.startsWith('csrftoken='))?.split('=')[1] || '';
+    }
+
+    function showResetError(msg) {
+        const el = document.getElementById('reset-error');
+        el.innerHTML = '<i class="fa fa-circle-exclamation"></i> ' + msg;
+        el.style.display = 'flex';
+    }
+
+    function submitReset() {
+        const pwd = document.getElementById('reset-password').value.trim();
+        if (!pwd || pwd.length < 6) {
+            showResetError('A senha deve ter pelo menos 6 caracteres.');
+            return;
+        }
+
+        const body = new FormData();
+        body.append('password', pwd);
+
+        fetch('/usuarios/' + currentUserId + '/alterar-senha/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrf() },
+            body: body,
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                document.getElementById('reset-modal').style.display = 'none';
+                showToast('Senha de ' + data.username + ' redefinida. Usuário deverá trocar no próximo login.', 'success');
+                setTimeout(() => location.reload(), 1800);
+            } else {
+                showResetError(data.error || 'Erro ao redefinir senha.');
+            }
+        })
+        .catch(() => showResetError('Erro de conexão.'));
+    }
+
+    function showToast(msg, type) {
+        const t = document.createElement('div');
+        t.className = 'toast toast-' + (type || 'info');
+        t.innerHTML = '<i class="fa fa-' + (type === 'success' ? 'circle-check' : 'circle-info') + '"></i> ' + msg;
+        document.body.appendChild(t);
+        requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+        setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3500);
+    }
+
+    // Submit on Enter in password field
+    document.getElementById('reset-password').addEventListener('keydown', e => {
+        if (e.key === 'Enter') submitReset();
+    });
+</script>
+{% endblock %}
