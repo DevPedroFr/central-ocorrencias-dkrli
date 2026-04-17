@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Analytics — Central de Ocorrências{% endblock %}
+{% block title %}Analytics — Central NOC/SOC{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -90,8 +90,8 @@
     <h2 class="page-title"><i class="fa fa-chart-pie" style="color:var(--c-500);margin-right:.4rem"></i>Analytics</h2>
     <p class="page-subtitle">Visão geral e indicadores de desempenho</p>
   </div>
-  <a href="{% url 'dashboard' %}" class="btn-ghost">
-    <i class="fa fa-arrow-left"></i> Ocorrências
+  <a href="{% url 'home' %}" class="btn-ghost">
+    <i class="fa fa-arrow-left"></i> Início
   </a>
 </div>
 

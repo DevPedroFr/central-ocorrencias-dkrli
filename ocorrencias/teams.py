@@ -84,7 +84,7 @@ def notificar_abertura(ocorrencia, dashboard_url: str) -> bool:
                                                 },
                                                 {
                                                     "type": "TextBlock",
-                                                    "text": "Central de Ocorrências — DKRLI",
+                                                    "text": "Central NOC/SOC — DKRLI",
                                                     "isSubtle": True,
                                                     "spacing": "None",
                                                 },
@@ -256,7 +256,7 @@ def notificar_fechamento(ocorrencia, elapsed_seconds: int, dashboard_url: str) -
                                                 },
                                                 {
                                                     "type": "TextBlock",
-                                                    "text": "Central de Ocorrências — DKRLI",
+                                                    "text": "Central NOC/SOC — DKRLI",
                                                     "isSubtle": True,
                                                     "spacing": "None",
                                                 },

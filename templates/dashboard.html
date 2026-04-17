@@ -1,11 +1,14 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Dashboard — Central de Ocorrências{% endblock %}
+{% block title %}Dashboard — Central NOC/SOC{% endblock %}
 
 {% block content %}
 <div class="dashboard-header">
     <div>
+        <a href="{% url 'home' %}" class="btn-ghost" style="margin-bottom:.5rem;display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;">
+            <i class="fa fa-arrow-left"></i> Início
+        </a>
         <h2 class="page-title">Dashboard</h2>
         <p class="page-subtitle">Monitoramento em tempo real das ocorrências</p>
     </div>

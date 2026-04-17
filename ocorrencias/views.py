@@ -22,7 +22,7 @@ def _get_profile(user):
 def login_view(request):
     error = None
     if request.user.is_authenticated:
-        return redirect('dashboard')
+        return redirect('home')
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '').strip()
@@ -31,7 +31,7 @@ def login_view(request):
             login(request, user)
             if _get_profile(user).must_change_password:
                 return redirect('change_password')
-            return redirect('dashboard')
+            return redirect('home')
         else:
             error = 'Usuário ou senha inválidos.'
     return render(request, 'login.html', {'error': error})
@@ -40,6 +40,18 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+
+@login_required
+def home(request):
+    if _get_profile(request.user).must_change_password:
+        return redirect('change_password')
+    return render(request, 'home.html')
+
+
+@login_required
+def manual_acionamento(request):
+    return render(request, 'manual_acionamento.html')
 
 
 @login_required
@@ -58,7 +70,7 @@ def dashboard(request):
 def change_password(request):
     profile = _get_profile(request.user)
     if not profile.must_change_password:
-        return redirect('dashboard')
+        return redirect('home')
 
     error = None
     if request.method == 'POST':
@@ -79,7 +91,7 @@ def change_password(request):
             profile.must_change_password = False
             profile.save()
             update_session_auth_hash(request, request.user)
-            return redirect('dashboard')
+            return redirect('home')
 
     return render(request, 'change_password.html', {'error': error})
 
@@ -87,7 +99,7 @@ def change_password(request):
 @login_required
 def usuarios(request):
     if not request.user.is_superuser:
-        return redirect('dashboard')
+        return redirect('home')
     users = User.objects.all().order_by('username').prefetch_related('profile')
     users_data = []
     for u in users:
@@ -232,4 +244,5 @@ def analytics(request):
         'day_labels': json.dumps(day_labels),
         'day_avg_minutes': json.dumps(day_avg_minutes),
     })
+
 

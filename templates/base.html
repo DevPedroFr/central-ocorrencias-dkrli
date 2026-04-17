@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Central de Ocorrências - DKRLI{% endblock %}</title>
+    <title>{% block title %}Central NOC/SOC - DKRLI{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -95,15 +95,6 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
         }
 
-        /* Logo com hover animado */
-        .navbar-logo {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        }
-
-        .navbar-logo:hover {
-            transform: scale(1.05) rotate(5deg) !important;
-        }
-
         /* Separação animada */
         .navbar-sep {
             transition: all 0.3s ease !important;
@@ -134,7 +125,6 @@
             overflow: hidden !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
-
         .btn-logout::before {
             content: '' !important;
             position: absolute !important;
@@ -433,16 +423,13 @@
         <div class="navbar-brand">
             <img src="https://i.postimg.cc/hGCydSSw/Logo-DKRLI.png" alt="DKRLI" class="navbar-logo">
             <div class="navbar-sep"></div>
-            <span class="navbar-app-name">Central de Ocorrências</span>
+            <span class="navbar-app-name">Central NOC/SOC</span>
         </div>
         <div class="navbar-clock">
             <span class="clock-time" id="live-clock">--:--:--</span>
             <span class="clock-date" id="live-date">---</span>
         </div>
         <div class="navbar-right">
-            <a href="{% url 'analytics' %}" class="btn-logout">
-                <i class="fa fa-chart-pie"></i> Analytics
-            </a>
             {% if user.is_superuser %}
             <a href="{% url 'usuarios' %}" class="btn-logout">
                 <i class="fa fa-users"></i> Usuários
