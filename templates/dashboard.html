@@ -110,6 +110,11 @@
                     <i class="fa fa-location-dot"></i> {{ o.local }}
                 </span>
                 <p class="occ-desc">{{ o.descricao }}</p>
+                {% if o.comentario_fechamento %}
+                <div class="occ-resolution">
+                    <i class="fa fa-comment-dots"></i> <strong>Resolução:</strong> {{ o.comentario_fechamento }}
+                </div>
+                {% endif %}
                 <div class="occ-meta">
                     <span><i class="fa fa-user"></i> {{ o.criado_por.username }}</span>
                     <span><i class="fa fa-calendar-check"></i> {{ o.fechado_em|date:"d/m/Y H:i" }}</span>
@@ -121,6 +126,7 @@
 </section>
 {% endif %}
 
+<!-- Modal: Nova Ocorrência -->
 <div class="modal-backdrop" id="modal-backdrop" onclick="closeModal(event)" style="display:none;">
     <div class="modal-panel">
         <div class="modal-head">
@@ -157,11 +163,45 @@
         </form>
     </div>
 </div>
+
+<!-- Modal: Encerrar Ocorrência -->
+<div class="modal-backdrop" id="modal-fechar-backdrop" style="display:none;">
+    <div class="modal-panel">
+        <div class="modal-head">
+            <span class="modal-head-title">
+                <i class="fa fa-circle-xmark"></i> Encerrar Ocorrência
+            </span>
+            <button class="modal-close" onclick="cancelarFechamento()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label class="field-label">
+                    <i class="fa fa-comment"></i> Comentário de resolução
+                    <span style="color:var(--red);margin-left:.2rem">*</span>
+                </label>
+                <textarea id="fechar-comentario" class="field-input" rows="4"
+                          placeholder="Descreva como a ocorrência foi resolvida..."></textarea>
+                <span id="fechar-comentario-erro"
+                      style="color:var(--red);font-size:.8rem;margin-top:.25rem;display:none;">
+                    O comentário de resolução é obrigatório.
+                </span>
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button type="button" class="btn-ghost" onclick="cancelarFechamento()">Cancelar</button>
+            <button type="button" class="btn-primary" id="btn-confirmar-fechar" onclick="confirmarFechamento()">
+                <i class="fa fa-circle-check"></i> Encerrar
+            </button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     // ── Modal controls ──────────────────────────────────────────────
+    let _occIdToClose = null;
+
     function openModal() {
         document.getElementById('modal-backdrop').style.display = 'flex';
     }
@@ -208,16 +248,53 @@
     }
 
     function fecharOcorrencia(id) {
-        fetch('/fechar/' + id + '/', {
+        _occIdToClose = id;
+        document.getElementById('fechar-comentario').value = '';
+        document.getElementById('fechar-comentario-erro').style.display = 'none';
+        document.getElementById('modal-fechar-backdrop').style.display = 'flex';
+        setTimeout(() => document.getElementById('fechar-comentario').focus(), 50);
+    }
+
+    function cancelarFechamento() {
+        document.getElementById('modal-fechar-backdrop').style.display = 'none';
+        _occIdToClose = null;
+    }
+
+    function confirmarFechamento() {
+        const comentario = document.getElementById('fechar-comentario').value.trim();
+        if (!comentario) {
+            document.getElementById('fechar-comentario-erro').style.display = 'block';
+            return;
+        }
+        document.getElementById('fechar-comentario-erro').style.display = 'none';
+        const btn = document.getElementById('btn-confirmar-fechar');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Encerrando...';
+
+        fetch('/fechar/' + _occIdToClose + '/', {
             method: 'POST',
-            headers: { 'X-CSRFToken': getCsrf() }
-        }).then(r => r.json()).then(() => {
-            const card = document.getElementById('card-' + id);
-            if (card) {
-                card.classList.add('is-removing');
-                setTimeout(() => { card.remove(); updateStatCount(); }, 400);
+            headers: {
+                'X-CSRFToken': getCsrf(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ comentario: comentario })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                showToast(data.error, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa fa-circle-check"></i> Encerrar';
+                return;
             }
+            document.getElementById('modal-fechar-backdrop').style.display = 'none';
             showToast('Ocorrência encerrada com sucesso.', 'success');
+            setTimeout(() => window.location.reload(), 900);
+        })
+        .catch(() => {
+            showToast('Erro ao encerrar a ocorrência.', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa fa-circle-check"></i> Encerrar';
         });
     }
 

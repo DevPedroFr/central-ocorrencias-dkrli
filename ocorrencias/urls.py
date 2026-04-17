@@ -12,4 +12,5 @@ urlpatterns = [
     path('trocar-senha/', views.change_password, name='change_password'),
     path('usuarios/', views.usuarios, name='usuarios'),
     path('usuarios/<int:user_id>/alterar-senha/', views.alterar_senha_usuario, name='alterar_senha_usuario'),
+    path('analytics/', views.analytics, name='analytics'),
 ]

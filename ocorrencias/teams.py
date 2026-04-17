@@ -209,3 +209,119 @@ def notificar_verificacao(ocorrencia, elapsed_seconds: int, dashboard_url: str) 
         ],
     }
     return _post(payload)
+
+
+def notificar_fechamento(ocorrencia, elapsed_seconds: int, dashboard_url: str) -> bool:
+    """Envia notificação de ocorrência encerrada com o comentário de resolução do analista."""
+    elapsed = _elapsed_str(elapsed_seconds)
+    fechado_por = getattr(ocorrencia, "_fechado_por_username", "—")
+    payload = {
+        "type": "message",
+        "attachments": [
+            {
+                "contentType": "application/vnd.microsoft.card.adaptive",
+                "content": {
+                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                    "type": "AdaptiveCard",
+                    "version": "1.4",
+                    "body": [
+                        {
+                            "type": "Container",
+                            "style": "good",
+                            "items": [
+                                {
+                                    "type": "ColumnSet",
+                                    "columns": [
+                                        {
+                                            "type": "Column",
+                                            "width": "auto",
+                                            "items": [
+                                                {
+                                                    "type": "TextBlock",
+                                                    "text": "✅",
+                                                    "size": "ExtraLarge",
+                                                }
+                                            ],
+                                        },
+                                        {
+                                            "type": "Column",
+                                            "width": "stretch",
+                                            "items": [
+                                                {
+                                                    "type": "TextBlock",
+                                                    "text": "Ocorrência Encerrada",
+                                                    "weight": "Bolder",
+                                                    "size": "Large",
+                                                    "color": "Good",
+                                                },
+                                                {
+                                                    "type": "TextBlock",
+                                                    "text": "Central de Ocorrências — DKRLI",
+                                                    "isSubtle": True,
+                                                    "spacing": "None",
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                }
+                            ],
+                        },
+                        {
+                            "type": "FactSet",
+                            "facts": [
+                                {"title": "📋 Título", "value": ocorrencia.titulo},
+                                {"title": "📍 Dispositivo", "value": ocorrencia.local},
+                                {
+                                    "title": "👤 Registrado por",
+                                    "value": ocorrencia.criado_por.username,
+                                },
+                                {
+                                    "title": "🔒 Encerrado por",
+                                    "value": fechado_por,
+                                },
+                                {
+                                    "title": "⏱️ Tempo até resolução",
+                                    "value": elapsed,
+                                },
+                                {
+                                    "title": "📅 Encerrado em",
+                                    "value": ocorrencia.fechado_em.strftime(
+                                        "%d/%m/%Y às %H:%M"
+                                    ),
+                                },
+                            ],
+                            "spacing": "Medium",
+                        },
+                        {
+                            "type": "Container",
+                            "style": "emphasis",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": "💬 Comentário de resolução",
+                                    "weight": "Bolder",
+                                    "size": "Small",
+                                    "spacing": "None",
+                                },
+                                {
+                                    "type": "TextBlock",
+                                    "text": ocorrencia.comentario_fechamento or "—",
+                                    "wrap": True,
+                                    "spacing": "Small",
+                                },
+                            ],
+                            "spacing": "Medium",
+                        },
+                    ],
+                    "actions": [
+                        {
+                            "type": "Action.OpenUrl",
+                            "title": "🖥️ Ver Dashboard",
+                            "url": dashboard_url,
+                        }
+                    ],
+                },
+            }
+        ],
+    }
+    return _post(payload)

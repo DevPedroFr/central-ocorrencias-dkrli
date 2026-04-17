@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analytics — Central de Ocorrências{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Page header ─────────────────────────────────── */
+  .an-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+  }
+
+  /* ── KPI strip ───────────────────────────────────── */
+  .kpi-strip { display: flex; gap: .75rem; margin-bottom: 1.75rem; flex-wrap: wrap; }
+  .kpi-card {
+    background: var(--white); border: 1px solid var(--n-200);
+    border-radius: var(--r); box-shadow: var(--s-xs);
+    padding: 1rem 1.375rem; display: flex; align-items: center; gap: 1rem;
+    min-width: 180px; flex: 1;
+    transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+  .kpi-card:hover { box-shadow: var(--s-md); transform: translateY(-1px); }
+  .kpi-icon {
+    width: 46px; height: 46px; border-radius: var(--r-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem; flex-shrink: 0;
+  }
+  .kpi-icon-open   { background: var(--orange-bg); color: var(--orange); }
+  .kpi-icon-closed { background: var(--green-bg);  color: var(--green);  }
+  .kpi-icon-time   { background: var(--c-50);       color: var(--c-500);  }
+  .kpi-body { display: flex; flex-direction: column; min-width: 0; }
+  .kpi-value { font-size: 1.875rem; font-weight: 800; color: var(--n-900); letter-spacing: -.04em; line-height: 1; }
+  .kpi-label {
+    font-size: .6875rem; font-weight: 600; color: var(--n-500);
+    text-transform: uppercase; letter-spacing: .06em; margin-top: 3px;
+  }
+
+  /* ── Charts grid ─────────────────────────────────── */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .charts-grid { grid-template-columns: 1fr; }
+  }
+
+  .chart-card {
+    background: var(--white); border: 1px solid var(--n-200);
+    border-radius: var(--r-lg); box-shadow: var(--s-xs);
+    padding: 1.375rem 1.5rem;
+  }
+  .chart-card-head {
+    display: flex; align-items: center; gap: .625rem;
+    margin-bottom: 1.25rem; padding-bottom: .75rem;
+    border-bottom: 1px solid var(--n-200);
+  }
+  .chart-card-icon {
+    width: 32px; height: 32px; border-radius: var(--r-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .875rem;
+  }
+  .chart-card-icon-donut { background: var(--c-50);    color: var(--c-500); }
+  .chart-card-icon-bar   { background: var(--green-bg); color: var(--green); }
+  .chart-card-title { font-size: .9375rem; font-weight: 700; color: var(--n-900); }
+  .chart-card-sub   { font-size: .75rem; color: var(--n-500); margin-top: 1px; }
+
+  .donut-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 1.25rem;
+  }
+  .donut-canvas-wrap { position: relative; width: 200px; height: 200px; }
+
+  .donut-legend { display: flex; gap: 1.25rem; justify-content: center; flex-wrap: wrap; }
+  .legend-item  { display: flex; align-items: center; gap: .4rem; font-size: .8125rem; font-weight: 500; color: var(--n-700); }
+  .legend-dot   { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  .no-data {
+    text-align: center; padding: 2.5rem 1rem; color: var(--n-500);
+    font-size: .875rem; font-style: italic;
+  }
+  .no-data i { display: block; font-size: 2rem; color: var(--n-300); margin-bottom: .625rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="an-header">
+  <div>
+    <h2 class="page-title"><i class="fa fa-chart-pie" style="color:var(--c-500);margin-right:.4rem"></i>Analytics</h2>
+    <p class="page-subtitle">Visão geral e indicadores de desempenho</p>
+  </div>
+  <a href="{% url 'dashboard' %}" class="btn-ghost">
+    <i class="fa fa-arrow-left"></i> Ocorrências
+  </a>
+</div>
+
+<!-- KPIs -->
+<div class="kpi-strip">
+  <div class="kpi-card">
+    <div class="kpi-icon kpi-icon-open"><i class="fa fa-triangle-exclamation"></i></div>
+    <div class="kpi-body">
+      <span class="kpi-value">{{ total_abertas }}</span>
+      <span class="kpi-label">Alertas Ativos</span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon kpi-icon-closed"><i class="fa fa-circle-check"></i></div>
+    <div class="kpi-body">
+      <span class="kpi-value">{{ total_fechadas }}</span>
+      <span class="kpi-label">Solucionados</span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon kpi-icon-time"><i class="fa fa-clock"></i></div>
+    <div class="kpi-body">
+      <span class="kpi-value" style="font-size:1.375rem;">{{ avg_formatted }}</span>
+      <span class="kpi-label">Tempo médio de solução</span>
+    </div>
+  </div>
+</div>
+
+<!-- Charts -->
+<div class="charts-grid">
+
+  <!-- Donut: Ativos vs Solucionados -->
+  <div class="chart-card">
+    <div class="chart-card-head">
+      <div class="chart-card-icon chart-card-icon-donut"><i class="fa fa-chart-pie"></i></div>
+      <div>
+        <div class="chart-card-title">Ativos vs Solucionados</div>
+        <div class="chart-card-sub">Total acumulado de alertas</div>
+      </div>
+    </div>
+    {% if total_abertas or total_fechadas %}
+    <div class="donut-wrap">
+      <div class="donut-canvas-wrap">
+        <canvas id="chartDonut"></canvas>
+      </div>
+      <div class="donut-legend">
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#ea6f0c"></span> Ativos ({{ total_abertas }})
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#16a34a"></span> Solucionados ({{ total_fechadas }})
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="no-data"><i class="fa fa-database"></i>Sem dados ainda.</div>
+    {% endif %}
+  </div>
+
+  <!-- Bar: Tempo médio de solução por dia -->
+  <div class="chart-card">
+    <div class="chart-card-head">
+      <div class="chart-card-icon chart-card-icon-bar"><i class="fa fa-chart-bar"></i></div>
+      <div>
+        <div class="chart-card-title">Tempo médio de solução</div>
+        <div class="chart-card-sub">Últimos 7 dias — em minutos</div>
+      </div>
+    </div>
+    {% if total_fechadas %}
+    <canvas id="chartBar" style="max-height:260px"></canvas>
+    {% else %}
+    <div class="no-data"><i class="fa fa-hourglass"></i>Nenhuma ocorrência solucionada ainda.</div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+  Chart.defaults.font.family = "'Inter', 'Segoe UI', system-ui, sans-serif";
+  Chart.defaults.color = '#64748b';
+
+  // ── Donut ──────────────────────────────────────────────────────
+  const donutCtx = document.getElementById('chartDonut');
+  if (donutCtx) {
+    const donutData = {{ donut_data|safe }};
+    new Chart(donutCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Ativos', 'Solucionados'],
+        datasets: [{
+          data: donutData,
+          backgroundColor: ['#ea6f0c', '#16a34a'],
+          hoverBackgroundColor: ['#d4610a', '#138a3d'],
+          borderWidth: 0,
+          hoverOffset: 6,
+        }]
+      },
+      options: {
+        cutout: '68%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.label}: ${ctx.parsed}`
+            }
+          }
+        },
+        animation: { animateRotate: true, duration: 600 }
+      }
+    });
+  }
+
+  // ── Bar ────────────────────────────────────────────────────────
+  const barCtx = document.getElementById('chartBar');
+  if (barCtx) {
+    const dayLabels = {{ day_labels|safe }};
+    const dayAvg    = {{ day_avg_minutes|safe }};
+
+    new Chart(barCtx, {
+      type: 'bar',
+      data: {
+        labels: dayLabels,
+        datasets: [{
+          label: 'Tempo médio (min)',
+          data: dayAvg,
+          backgroundColor: 'rgba(26,111,212,.18)',
+          borderColor: '#1a6fd4',
+          borderWidth: 2,
+          borderRadius: 6,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        spanGaps: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                if (ctx.parsed.y === null) return ' Sem dados';
+                const h = Math.floor(ctx.parsed.y / 60);
+                const m = Math.round(ctx.parsed.y % 60);
+                return h > 0 ? ` ${h}h ${m}min` : ` ${m}min`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            border: { display: false },
+            ticks: { font: { size: 12 } }
+          },
+          y: {
+            beginAtZero: true,
+            border: { display: false, dash: [4, 4] },
+            grid: { color: '#e2e8f0' },
+            ticks: {
+              font: { size: 12 },
+              callback: val => val + ' min'
+            }
+          }
+        },
+        animation: { duration: 500 }
+      }
+    });
+  }
+</script>
+{% endblock %}

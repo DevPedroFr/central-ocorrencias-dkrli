@@ -213,6 +213,11 @@ body.dashboard-body { display: flex; flex-direction: column; height: 100dvh; ove
   padding:.175rem .55rem; border-radius:99px; margin-bottom:.5rem;
 }
 .occ-desc   { font-size:.8125rem; color:var(--n-500); line-height:1.6; margin-bottom:.75rem; }
+.occ-resolution {
+  font-size: .8125rem; color: var(--n-700); line-height: 1.5;
+  background: var(--green-bg); border-left: 3px solid var(--green);
+  border-radius: var(--r-sm); padding: .5rem .625rem; margin-bottom: .75rem;
+}
 .occ-meta   {
   display:flex; gap:1rem; flex-wrap:wrap; font-size:.75rem; color:var(--n-500);
   padding-top:.6rem; border-top:1px solid var(--n-200);

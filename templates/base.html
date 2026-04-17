@@ -11,6 +11,421 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_css %}{% endblock %}
+    <style>
+        /* Animações e melhorias visuais */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(0, 123, 255, 0.4);
+            }
+            100% {
+                box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
+            }
+        }
+
+        /* Navbar com animação de entrada */
+        .navbar {
+            animation: fadeInDown 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .navbar:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        /* Logo com hover animado */
+        .navbar-logo {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .navbar-logo:hover {
+            transform: scale(1.05) rotate(5deg) !important;
+        }
+
+        /* Separação animada */
+        .navbar-sep {
+            transition: all 0.3s ease !important;
+        }
+
+        .navbar-brand:hover .navbar-sep {
+            transform: scaleY(1.5) !important;
+        }
+
+        /* Relógio com animação de pulsação suave */
+        .navbar-clock {
+            animation: fadeInDown 0.6s 0.1s cubic-bezier(0.4, 0, 0.2, 1) backwards !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .clock-time {
+            transition: all 0.3s ease !important;
+        }
+
+        .navbar-clock:hover .clock-time {
+            text-shadow: 0 0 8px rgba(0, 123, 255, 0.5) !important;
+            transform: scale(1.02) !important;
+        }
+
+        /* Botões com animações */
+        .btn-logout {
+            position: relative !important;
+            overflow: hidden !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .btn-logout::before {
+            content: '' !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            width: 0 !important;
+            height: 0 !important;
+            border-radius: 50% !important;
+            background: rgba(255, 255, 255, 0.3) !important;
+            transform: translate(-50%, -50%) !important;
+            transition: width 0.6s, height 0.6s !important;
+        }
+
+        .btn-logout:hover::before {
+            width: 300px !important;
+            height: 300px !important;
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3) !important;
+        }
+
+        /* User pill com animação */
+        .user-pill {
+            animation: slideInLeft 0.5s 0.2s cubic-bezier(0.4, 0, 0.2, 1) backwards !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .user-pill:hover {
+            transform: translateX(3px) !important;
+            background: rgba(255, 255, 255, 0.15) !important;
+        }
+
+        .user-avatar {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .user-pill:hover .user-avatar {
+            transform: scale(1.1) rotate(10deg) !important;
+        }
+
+        /* Main content com fade in */
+        .main-content {
+            animation: fadeInUp 0.6s 0.2s cubic-bezier(0.4, 0, 0.2, 1) backwards !important;
+        }
+
+        /* Cards e elementos interativos (para uso nas páginas) */
+        .card, .dashboard-card, .ocorrencia-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            animation: fadeInUp 0.5s ease-out backwards !important;
+        }
+
+        .card:hover, .dashboard-card:hover, .ocorrencia-card:hover {
+            transform: translateY(-5px) !important;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        /* Botões genéricos com ripple effect */
+        button, .btn, .button, input[type="submit"] {
+            position: relative !important;
+            overflow: hidden !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        button::after, .btn::after, .button::after, input[type="submit"]::after {
+            content: '' !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            width: 0 !important;
+            height: 0 !important;
+            border-radius: 50% !important;
+            background: rgba(255, 255, 255, 0.5) !important;
+            transform: translate(-50%, -50%) !important;
+            transition: width 0.6s, height 0.6s !important;
+        }
+
+        button:active::after, .btn:active::after, .button:active::after, input[type="submit"]:active::after {
+            width: 300px !important;
+            height: 300px !important;
+        }
+
+        button:hover, .btn:hover, .button:hover, input[type="submit"]:hover {
+            transform: translateY(-2px) !important;
+        }
+
+        /* Input fields com glow effect */
+        input, textarea, select {
+            transition: all 0.3s ease !important;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            animation: glow 1.5s infinite !important;
+            transform: scale(1.02) !important;
+        }
+
+        /* Loading shimmer para elementos carregando */
+        .loading-shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%) !important;
+            background-size: 1000px 100% !important;
+            animation: shimmer 2s infinite !important;
+        }
+
+        /* Ícones com animação de hover */
+        .fa, .fas, .far {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .btn-logout:hover .fa, .btn-logout:hover .fas, .btn-logout:hover .far {
+            transform: scale(1.1) translateX(2px) !important;
+        }
+
+        /* Scrollbar personalizada e suave */
+        ::-webkit-scrollbar {
+            width: 10px;
+            transition: all 0.3s ease;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Animações para notificações/toasts */
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+
+        .notification-toast {
+            animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .notification-toast.hide {
+            animation: slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+        }
+
+        /* Efeito de cursor personalizado (opcional) */
+        .dashboard-body {
+            cursor: default;
+        }
+
+        a, button, .btn, .clickable {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        /* Animação de entrada para tabelas */
+        table tr {
+            animation: slideInLeft 0.4s ease-out backwards !important;
+        }
+
+        table tr:nth-child(1) { animation-delay: 0.05s; }
+        table tr:nth-child(2) { animation-delay: 0.1s; }
+        table tr:nth-child(3) { animation-delay: 0.15s; }
+        table tr:nth-child(4) { animation-delay: 0.2s; }
+        table tr:nth-child(5) { animation-delay: 0.25s; }
+        table tr:nth-child(6) { animation-delay: 0.3s; }
+        table tr:nth-child(7) { animation-delay: 0.35s; }
+        table tr:nth-child(8) { animation-delay: 0.4s; }
+        table tr:nth-child(9) { animation-delay: 0.45s; }
+        table tr:nth-child(10) { animation-delay: 0.5s; }
+
+        /* Estatísticas com animação de contagem */
+        .stat-number {
+            transition: all 0.3s ease;
+        }
+
+        /* Badges com efeito de brilho */
+        .badge, .status-badge {
+            transition: all 0.3s ease !important;
+        }
+
+        .badge:hover, .status-badge:hover {
+            filter: brightness(1.1) !important;
+            transform: scale(1.05) !important;
+        }
+
+        /* Tooltip animado */
+        [data-tooltip] {
+            position: relative;
+            cursor: pointer;
+        }
+
+        [data-tooltip]:before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 12px;
+            border-radius: 6px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        [data-tooltip]:hover:before {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-15px);
+        }
+
+        /* Spinner de loading */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            animation: spin 0.8s linear infinite !important;
+        }
+
+        /* Progress bar animada */
+        .progress-bar {
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        /* Modal com animação */
+        .modal {
+            animation: fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        /* Efeito de ondulação para elementos interativos */
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.6);
+            transform: scale(0);
+            animation: ripple-animation 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Responsividade para animações em mobile */
+        @media (max-width: 768px) {
+            .card:hover, .dashboard-card:hover, .ocorrencia-card:hover {
+                transform: translateY(-3px) !important;
+            }
+            
+            .btn-logout:hover {
+                transform: translateY(-1px) !important;
+            }
+            
+            [data-tooltip]:before {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body class="dashboard-body">
     {% if user.is_authenticated %}
@@ -25,6 +440,9 @@
             <span class="clock-date" id="live-date">---</span>
         </div>
         <div class="navbar-right">
+            <a href="{% url 'analytics' %}" class="btn-logout">
+                <i class="fa fa-chart-pie"></i> Analytics
+            </a>
             {% if user.is_superuser %}
             <a href="{% url 'usuarios' %}" class="btn-logout">
                 <i class="fa fa-users"></i> Usuários
@@ -63,6 +481,67 @@
             tick();
             setInterval(tick, 1000);
         })();
+
+        // Função para adicionar efeito ripple em elementos
+        function addRippleEffect(element) {
+            element.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple-effect';
+                const rect = element.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = e.clientX - rect.left - size/2 + 'px';
+                ripple.style.top = e.clientY - rect.top - size/2 + 'px';
+                element.style.position = 'relative';
+                element.style.overflow = 'hidden';
+                element.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            });
+        }
+
+        // Aplicar ripple effect a todos os botões e links com classe btn
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('button, .btn, .btn-logout, input[type="submit"]');
+            buttons.forEach(btn => addRippleEffect(btn));
+            
+            // Adicionar classe para animação de scroll suave
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+            
+            // Adicionar efeito de fade-in em elementos ao scroll
+            const fadeElements = document.querySelectorAll('.card, .dashboard-card, .ocorrencia-card, table tr');
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+            
+            fadeElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'all 0.5s ease-out';
+                observer.observe(el);
+            });
+        });
     </script>
     {% endif %}
 </body>

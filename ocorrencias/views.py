@@ -1,3 +1,7 @@
+import json
+
+from datetime import timedelta
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -158,8 +162,74 @@ def confirmar_ocorrencia(request, pk):
 @require_POST
 def fechar_ocorrencia(request, pk):
     ocorrencia = get_object_or_404(Ocorrencia, pk=pk, status='aberta')
+    try:
+        data = json.loads(request.body)
+        comentario = data.get('comentario', '').strip()
+    except (json.JSONDecodeError, AttributeError):
+        comentario = ''
+    if not comentario:
+        return JsonResponse({'error': 'Comentário de resolução é obrigatório.'}, status=400)
     ocorrencia.status = 'fechada'
     ocorrencia.fechado_em = timezone.now()
-    ocorrencia.save(update_fields=['status', 'fechado_em'])
+    ocorrencia.comentario_fechamento = comentario
+    ocorrencia.save(update_fields=['status', 'fechado_em', 'comentario_fechamento'])
+    elapsed = int((ocorrencia.fechado_em - ocorrencia.criado_em).total_seconds())
+    ocorrencia._fechado_por_username = request.user.username
+    dashboard_url = request.build_absolute_uri('/')
+    teams_notif.notificar_fechamento(ocorrencia, elapsed, dashboard_url)
     return JsonResponse({'status': 'fechada'})
+
+
+@login_required
+def analytics(request):
+    today = timezone.now().date()
+    last_7 = [today - timedelta(days=i) for i in range(6, -1, -1)]
+
+    total_abertas = Ocorrencia.objects.filter(status='aberta').count()
+    total_fechadas = Ocorrencia.objects.filter(status='fechada').count()
+
+    closed_qs = list(
+        Ocorrencia.objects.filter(status='fechada', fechado_em__isnull=False)
+    )
+
+    # Overall average resolution time (seconds)
+    avg_total_secs = None
+    if closed_qs:
+        avg_total_secs = (
+            sum((o.fechado_em - o.criado_em).total_seconds() for o in closed_qs)
+            / len(closed_qs)
+        )
+
+    def fmt_duration(secs):
+        if secs is None:
+            return '—'
+        h = int(secs // 3600)
+        m = int((secs % 3600) // 60)
+        if h:
+            return f'{h}h {m}min'
+        return f'{m}min'
+
+    # Per-day average resolution time for last 7 days (in minutes, null = no data)
+    day_labels = []
+    day_avg_minutes = []
+    for day in last_7:
+        day_closed = [o for o in closed_qs if o.fechado_em.date() == day]
+        day_labels.append(day.strftime('%d/%m'))
+        if day_closed:
+            avg_mins = (
+                sum((o.fechado_em - o.criado_em).total_seconds() for o in day_closed)
+                / len(day_closed) / 60
+            )
+            day_avg_minutes.append(round(avg_mins, 1))
+        else:
+            day_avg_minutes.append(None)
+
+    return render(request, 'analytics.html', {
+        'total_abertas': total_abertas,
+        'total_fechadas': total_fechadas,
+        'avg_formatted': fmt_duration(avg_total_secs),
+        'donut_data': json.dumps([total_abertas, total_fechadas]),
+        'day_labels': json.dumps(day_labels),
+        'day_avg_minutes': json.dumps(day_avg_minutes),
+    })
 

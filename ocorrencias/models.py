@@ -16,6 +16,7 @@ class Ocorrencia(models.Model):
     criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
     ultima_confirmacao = models.DateTimeField(auto_now_add=True, verbose_name='Última confirmação')
     fechado_em = models.DateTimeField(null=True, blank=True, verbose_name='Fechado em')
+    comentario_fechamento = models.TextField(null=True, blank=True, verbose_name='Comentário de fechamento')
 
     class Meta:
         verbose_name = 'Ocorrência'
