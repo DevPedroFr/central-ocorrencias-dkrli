@@ -158,21 +158,21 @@
     </div>
 
     <div class="home-cards">
-        <a href="{% url 'manual_acionamento' %}" class="home-card">
-            <div class="home-card-icon orange">
-                <i class="fa fa-book-open"></i>
-            </div>
-            <div class="home-card-title">Manual de Acionamento</div>
-            <div class="home-card-desc">Consulte os procedimentos e diretrizes operacionais</div>
-            <div class="home-card-arrow">Acessar <i class="fa fa-arrow-right"></i></div>
-        </a>
-
         <a href="{% url 'dashboard' %}" class="home-card">
             <div class="home-card-icon blue">
                 <i class="fa fa-tower-broadcast"></i>
             </div>
-            <div class="home-card-title">Central NOC/SOC</div>
+            <div class="home-card-title">Ocorrências Físicas</div>
             <div class="home-card-desc">Registre, monitore e encerre ocorrências em tempo real</div>
+            <div class="home-card-arrow">Acessar <i class="fa fa-arrow-right"></i></div>
+        </a>
+
+        <a href="{% url 'observacoes_noc' %}" class="home-card">
+            <div class="home-card-icon orange">
+                <i class="fa fa-clipboard-list"></i>
+            </div>
+            <div class="home-card-title">Observações NOC</div>
+            <div class="home-card-desc">Registre e consulte observações e notas operacionais do NOC</div>
             <div class="home-card-arrow">Acessar <i class="fa fa-arrow-right"></i></div>
         </a>
 
