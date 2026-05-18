@@ -27,22 +27,6 @@ class Ocorrencia(models.Model):
         return f'{self.titulo} ({self.status})'
 
 
-class ObservacaoNOC(models.Model):
-    cliente_slug = models.SlugField(max_length=120, verbose_name='Slug do cliente')
-    cliente_nome = models.CharField(max_length=200, verbose_name='Nome do cliente')
-    texto = models.TextField(verbose_name='Observação')
-    criado_por = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Registrado por')
-    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
-
-    class Meta:
-        verbose_name = 'Observação NOC'
-        verbose_name_plural = 'Observações NOC'
-        ordering = ['-criado_em']
-
-    def __str__(self):
-        return f'{self.cliente_nome} — {self.criado_em:%d/%m/%Y %H:%M}'
-
-
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     must_change_password = models.BooleanField(default=False, verbose_name='Deve trocar senha')

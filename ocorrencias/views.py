@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from .models import Ocorrencia, UserProfile, ObservacaoNOC
+from .models import Ocorrencia, UserProfile
 from . import teams as teams_notif
 
 
@@ -52,130 +52,6 @@ def home(request):
 @login_required
 def manual_acionamento(request):
     return render(request, 'manual_acionamento.html')
-
-
-@login_required
-def observacoes_noc(request):
-    grupos = [
-        {
-            'label': '24×7',
-            'nome': 'INTEGRAL',
-            'cor': 'blue',
-            'clientes': [
-                {'slug': 'compare-paraty',           'nome': 'Compare / Paraty',            'tags': ['Máquina Virtual', 'Virtualizador']},
-                {'slug': 'torra',                    'nome': 'Torra',                       'tags': ['Backup', 'Wazuh', 'Zabbix']},
-                {'slug': 'hospital-nipo',            'nome': 'Hospital NIPO',               'tags': ['Infraestrutura', 'Zabbix', 'Grafana']},
-                {'slug': 'liz-cmr',                  'nome': 'Liz CMR',                     'tags': ['Link', 'Firewall', 'Analyzer']},
-                {'slug': 'dux-nutrition',            'nome': 'DUX Nutrition',               'tags': ['DIO', 'Cabo UTP', 'Cabo Ótico']},
-                {'slug': 'billing-group-qualicorp',  'nome': 'Billing Group / Qualicorp',   'tags': ['Virtualizador', 'Storage', 'Firewall']},
-                {'slug': 'usina-vista-alegre',       'nome': 'Usina Vista Alegre',           'tags': ['Máquina Virtual', 'Virtualizador']},
-                {'slug': 'licks-legal',              'nome': 'Licks Legal',                 'tags': ['Links', 'Switch', 'Wazuh']},
-                {'slug': 'veste',                    'nome': 'Veste',                       'tags': ['Servidores', 'Firewall', 'Switch']},
-                {'slug': 'puc-campinas',             'nome': 'PUC Campinas',                'tags': ['Link', 'Analyzer', 'Access Point']},
-            ],
-        },
-        {
-            'label': '8×5',
-            'nome': 'COMERCIAL',
-            'cor': 'orange',
-            'clientes': [
-                {'slug': 'fundacao-lucy-montoro',    'nome': 'Fundação / Lucy Montoro / AME / FMABC / FUABC / HGC / HMC', 'tags': ['Firewall', 'Servidores', 'Link']},
-                {'slug': 'diagi',                    'nome': 'Diagi',                       'tags': ['Licenciamento', 'Firewall', 'Zabbix']},
-                {'slug': 'kovi',                     'nome': 'Kovi',                        'tags': ['PopProtect', 'DIO', 'Cabo Ótico']},
-                {'slug': 'sindifast',                'nome': 'Sindifast',                   'tags': ['Máquina Virtual', 'Link', 'Switch']},
-                {'slug': 'ituran',                   'nome': 'Ituran',                      'tags': ['VPN', 'Servidores', 'Zabbix']},
-                {'slug': 'prime-energy',             'nome': 'Prime Energy',                'tags': ['Link', 'AP', 'Firewall']},
-                {'slug': 'colegio-pioneiro',         'nome': 'Colégio Pioneiro',            'tags': ['PABX', 'Máquina Virtual', 'Antena']},
-                {'slug': 'bellanapoli-wbam',         'nome': 'Bellanapoli / WBAM',          'tags': ['Link', 'Firewall', 'Zabbix']},
-                {'slug': 'nippon',                   'nome': 'Nippon',                      'tags': ['Firewall', 'Software', 'Zabbix']},
-                {'slug': 'evernex-marfrig',          'nome': 'Evernex / Marfrig',           'tags': ['Hardware', 'Servidores', 'Zabbix']},
-                {'slug': 'potencial-florestal',      'nome': 'Potencial Florestal',         'tags': ['Link', 'Firewall', 'Zabbix']},
-                {'slug': 'gonzalez',                 'nome': 'Gonzalez',                    'tags': ['Firewall', 'Zabbix', 'Grafana']},
-                {'slug': 'futon-company',            'nome': 'Futon Company',               'tags': ['Máquina Virtual', 'Software', 'Firewall']},
-                {'slug': 'galeazi',                  'nome': 'Galeazi',                     'tags': ['Firewall', 'Zabbix', 'Grafana']},
-                {'slug': 'sakura-turismo',           'nome': 'Sakura Turismo',              'tags': ['Software', 'Firewall', 'Analyzer']},
-                {'slug': 'cmd-centro-medico',        'nome': 'CMD – Centro Médico Diagnóstico', 'tags': ['Firewall', 'Zabbix', 'Grafana']},
-            ],
-        },
-    ]
-    # Anexa contagem de observações em cada cliente
-    for grupo in grupos:
-        for cliente in grupo['clientes']:
-            cliente['total_obs'] = ObservacaoNOC.objects.filter(cliente_slug=cliente['slug']).count()
-    recentes = ObservacaoNOC.objects.select_related('criado_por').order_by('-criado_em')[:4]
-    return render(request, 'observacoes_noc.html', {'grupos': grupos, 'recentes': recentes})
-
-
-# Mapa slug → nome (usado pelas views de detalhe)
-_CLIENTES = {
-    'compare-paraty':           'Compare / Paraty',
-    'torra':                    'Torra',
-    'hospital-nipo':            'Hospital NIPO',
-    'liz-cmr':                  'Liz CMR',
-    'dux-nutrition':            'DUX Nutrition',
-    'billing-group-qualicorp':  'Billing Group / Qualicorp',
-    'usina-vista-alegre':       'Usina Vista Alegre',
-    'licks-legal':              'Licks Legal',
-    'veste':                    'Veste',
-    'puc-campinas':             'PUC Campinas',
-    'fundacao-lucy-montoro':    'Fundação / Lucy Montoro / AME / FMABC / FUABC / HGC / HMC',
-    'diagi':                    'Diagi',
-    'kovi':                     'Kovi',
-    'sindifast':                'Sindifast',
-    'ituran':                   'Ituran',
-    'prime-energy':             'Prime Energy',
-    'colegio-pioneiro':         'Colégio Pioneiro',
-    'bellanapoli-wbam':         'Bellanapoli / WBAM',
-    'nippon':                   'Nippon',
-    'evernex-marfrig':          'Evernex / Marfrig',
-    'potencial-florestal':      'Potencial Florestal',
-    'gonzalez':                 'Gonzalez',
-    'futon-company':            'Futon Company',
-    'galeazi':                  'Galeazi',
-    'sakura-turismo':           'Sakura Turismo',
-    'cmd-centro-medico':        'CMD – Centro Médico Diagnóstico',
-}
-
-
-@login_required
-def observacoes_cliente(request, slug):
-    nome = _CLIENTES.get(slug)
-    if nome is None:
-        from django.http import Http404
-        raise Http404
-    observacoes = ObservacaoNOC.objects.filter(cliente_slug=slug).order_by('-criado_em')
-    return render(request, 'observacoes_cliente.html', {
-        'cliente_slug': slug,
-        'cliente_nome': nome,
-        'observacoes': observacoes,
-    })
-
-
-@login_required
-@require_POST
-def nova_observacao_cliente(request, slug):
-    nome = _CLIENTES.get(slug)
-    if nome is None:
-        from django.http import Http404
-        raise Http404
-    texto = request.POST.get('texto', '').strip()
-    if texto:
-        ObservacaoNOC.objects.create(
-            cliente_slug=slug,
-            cliente_nome=nome,
-            texto=texto,
-            criado_por=request.user,
-        )
-    return redirect('observacoes_cliente', slug=slug)
-
-
-@login_required
-@require_POST
-def deletar_observacao_cliente(request, pk):
-    obs = get_object_or_404(ObservacaoNOC, pk=pk)
-    slug = obs.cliente_slug
-    obs.delete()
-    return redirect('observacoes_cliente', slug=slug)
 
 
 @login_required
