@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Nova Regra de Resposta Automática — DKRLI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rule-page {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 40px 28px 60px;
+    }
+
+    .rule-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 18px;
+        align-items: start;
+    }
+
+    .panel {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 22px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .problem-title {
+        margin: 0 0 12px;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #1a1f2e;
+        line-height: 1.45;
+    }
+
+    .problem-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .problem-meta span {
+        background: #f1f5f9;
+        color: #475569;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .problem-content {
+        font-size: 0.87rem;
+        line-height: 1.65;
+        color: #475569;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .form-title {
+        margin: 0 0 16px;
+        font-size: 1rem;
+        font-weight: 800;
+        color: #1a1f2e;
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        margin-bottom: 16px;
+    }
+
+    .field label {
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: #334155;
+    }
+
+    .field small {
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+
+    .field input,
+    .field textarea {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 0.9rem;
+        color: #1a1f2e;
+        background: #fff;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .field textarea {
+        min-height: 180px;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .submit-btn {
+        width: 100%;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #dc2626, #991b1b);
+        color: #fff;
+        padding: 13px 18px;
+        font-size: 0.92rem;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(220, 38, 38, 0.2);
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px) !important;
+    }
+
+    .message-box {
+        margin-bottom: 16px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    @media (max-width: 860px) {
+        .rule-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .rule-page {
+            padding: 24px 16px 40px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rule-page">
+    <a href="{% url 'configuracao_resposta_automatica' %}" class="btn-ghost" style="margin-bottom:1rem;display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;">
+        <i class="fa fa-arrow-left"></i> Voltar
+    </a>
+
+    <h2 class="page-title">Nova Regra de Resposta Automática</h2>
+    <p class="page-subtitle">A regra será aplicada para novos problemas com este mesmo título no GLPI</p>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="message-box">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="rule-grid">
+        <section class="panel">
+            <h3 class="form-title">Problema selecionado</h3>
+            <p class="problem-title">{{ problem.name }}</p>
+            <div class="problem-meta">
+                <span>ID {{ problem.id }}</span>
+                <span>Status {{ problem.status }}</span>
+                <span>Prioridade {{ problem.priority }}</span>
+                <span>Origem {{ problem.users_id_recipient }}</span>
+            </div>
+            <div class="problem-content">{{ problem.content }}</div>
+        </section>
+
+        <section class="panel">
+            <h3 class="form-title">Configuração da regra</h3>
+            <form method="post">
+                {% csrf_token %}
+                <div class="field">
+                    <label for="id_duration_minutes">Tempo de vigência</label>
+                    <input id="id_duration_minutes" type="number" name="duration_minutes" min="1" step="1" value="60" required>
+                    <small>Tempo em minutos que a regra ficará ativa.</small>
+                </div>
+
+                <div class="field">
+                    <label for="id_analyst_name">Nome do analista</label>
+                    <input id="id_analyst_name" type="text" name="analyst_name" value="{{ default_analyst_name }}" required>
+                    <small>Informe o login/nome usado no GLPI. O sistema localizará o usuário automaticamente.</small>
+                </div>
+
+                <div class="field">
+                    <label for="id_followup_text">Resposta automática (followup)</label>
+                    <textarea id="id_followup_text" name="followup_text" required>Atendimento automático iniciado pela regra configurada na Central DKRLI.
+Favor seguir com a tratativa deste alerta.</textarea>
+                    <small>Este texto será enviado como followup no problema do GLPI.</small>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fa fa-bolt"></i> Salvar regra automática
+                </button>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}

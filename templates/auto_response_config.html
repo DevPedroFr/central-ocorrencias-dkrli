@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+
+{% block title %}Configuração de Resposta Automática — DKRLI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auto-page {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 40px 28px 60px;
+    }
+
+    .auto-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .refresh-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #fff3cd;
+        color: #92510a;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .refresh-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #f59e0b;
+        animation: pulse 1.6s ease-in-out infinite;
+    }
+
+    .message-box {
+        margin-bottom: 16px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .message-box.error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .message-box.success {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .section-title h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1a1f2e;
+    }
+
+    .section-title span {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    .alert-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+        gap: 16px;
+        margin-bottom: 34px;
+    }
+
+    .alert-card {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 18px;
+        background: #ffffff;
+        border-radius: 18px;
+        border: 2px solid transparent;
+        text-decoration: none;
+        color: inherit;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+        transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .alert-card:hover {
+        transform: translateY(-5px) !important;
+        border-color: #dc2626;
+        box-shadow: 0 14px 30px rgba(220, 38, 38, 0.12) !important;
+    }
+
+    .alert-top {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .alert-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #dc262622, #dc262644);
+        color: #dc2626;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 1rem;
+    }
+
+    .alert-title {
+        margin: 0;
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #1a1f2e;
+        line-height: 1.4;
+    }
+
+    .alert-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    .meta-pill {
+        background: #f1f5f9;
+        border-radius: 999px;
+        padding: 4px 9px;
+        font-weight: 600;
+    }
+
+    .alert-content {
+        font-size: 0.82rem;
+        color: #475569;
+        line-height: 1.55;
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .rules-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .rule-card {
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .rule-card-title {
+        margin: 0 0 6px;
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #1a1f2e;
+    }
+
+    .rule-card-sub {
+        margin: 0;
+        font-size: 0.8rem;
+        color: #6b7280;
+        line-height: 1.55;
+    }
+
+    .rule-actions form { margin: 0; }
+
+    .btn-danger-soft {
+        border: 1px solid #fecaca;
+        background: #fff5f5;
+        color: #b91c1c;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .empty-state {
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 34px 24px;
+        text-align: center;
+        color: #94a3b8;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+    }
+
+    @media (max-width: 640px) {
+        .auto-page {
+            padding: 24px 16px 40px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auto-page">
+    <div class="auto-header">
+        <div>
+            <a href="{% url 'home' %}" class="btn-ghost" style="margin-bottom:.6rem;display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;">
+                <i class="fa fa-arrow-left"></i> Início
+            </a>
+            <h2 class="page-title">Configuração de Resposta Automática</h2>
+            <p class="page-subtitle">Selecione um alerta recente do GLPI e configure atribuição + followup automáticos por título</p>
+        </div>
+        <div class="refresh-chip">
+            <span class="refresh-dot"></span>
+            Atualização automática a cada 1 minuto
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="message-box {% if message.tags %}{{ message.tags }}{% else %}success{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if integration_error %}
+    <div class="message-box error">
+        {{ integration_error }}
+    </div>
+    {% endif %}
+
+    <section>
+        <div class="section-title">
+            <h3>Últimos 10 alertas do GLPI</h3>
+            <span>clique em um card para criar uma regra</span>
+        </div>
+
+        {% if recent_problems %}
+        <div class="alert-grid">
+            {% for problem in recent_problems %}
+            <a href="{% url 'nova_regra_resposta_automatica' problem.id %}" class="alert-card">
+                <div class="alert-top">
+                    <div class="alert-icon"><i class="fa fa-bell"></i></div>
+                    <div>
+                        <p class="alert-title">{{ problem.name }}</p>
+                    </div>
+                </div>
+                <div class="alert-meta">
+                    <span class="meta-pill">ID {{ problem.id }}</span>
+                    <span class="meta-pill">Status {{ problem.status }}</span>
+                    <span class="meta-pill">Prioridade {{ problem.priority }}</span>
+                </div>
+                <div class="alert-content">{{ problem.content }}</div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fa fa-inbox" style="font-size:2rem;margin-bottom:10px;"></i>
+            <div>Nenhum alerta recente disponível no GLPI.</div>
+        </div>
+        {% endif %}
+    </section>
+
+    <section>
+        <div class="section-title">
+            <h3>Regras ativas</h3>
+            <span>respostas automáticas vigentes neste momento</span>
+        </div>
+        {% if active_rules %}
+        <div class="rules-list">
+            {% for rule in active_rules %}
+            <div class="rule-card">
+                <div>
+                    <p class="rule-card-title">{{ rule.problem_title }}</p>
+                    <p class="rule-card-sub">
+                        Analista: {{ rule.analyst_name }}<br>
+                        Criada por {{ rule.created_by.username }}<br>
+                        Vigente até {{ rule.active_until|date:"d/m/Y H:i" }}<br>
+                        Execuções: {{ rule.executions.count }}
+                    </p>
+                </div>
+                <div class="rule-actions">
+                    <form method="post" action="{% url 'desativar_regra_resposta_automatica' rule.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-danger-soft">
+                            <i class="fa fa-ban"></i> Desativar regra
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fa fa-bolt" style="font-size:2rem;margin-bottom:10px;"></i>
+            <div>Nenhuma regra ativa configurada.</div>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+setTimeout(function () {
+    window.location.reload();
+}, 60000);
+</script>
+{% endblock %}

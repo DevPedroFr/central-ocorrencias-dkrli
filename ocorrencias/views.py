@@ -2,6 +2,7 @@ import json
 
 from datetime import timedelta
 
+from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -10,7 +11,8 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from .models import Ocorrencia, UserProfile
+from .glpi import GLPIClient, GLPIError
+from .models import AutoResponseExecution, AutoResponseRule, Ocorrencia, UserProfile
 from . import teams as teams_notif
 
 
@@ -52,6 +54,102 @@ def home(request):
 @login_required
 def manual_acionamento(request):
     return render(request, 'manual_acionamento.html')
+
+
+@login_required
+def configuracao_resposta_automatica(request):
+    if _get_profile(request.user).must_change_password:
+        return redirect('change_password')
+
+    recent_problems = []
+    integration_error = None
+    try:
+        with GLPIClient() as client:
+            recent_problems = client.get_recent_problems(limit=10)
+    except GLPIError as exc:
+        integration_error = str(exc)
+
+    active_rules = AutoResponseRule.objects.filter(
+        enabled=True,
+        active_until__gte=timezone.now(),
+    ).select_related('created_by')
+
+    return render(request, 'auto_response_config.html', {
+        'recent_problems': recent_problems,
+        'integration_error': integration_error,
+        'active_rules': active_rules,
+    })
+
+
+@login_required
+def nova_regra_resposta_automatica(request, problem_id):
+    if _get_profile(request.user).must_change_password:
+        return redirect('change_password')
+
+    try:
+        with GLPIClient() as client:
+            problem = client.get_problem(problem_id)
+    except GLPIError as exc:
+        messages.error(request, f'Falha ao consultar problema no GLPI: {exc}')
+        return redirect('configuracao_resposta_automatica')
+
+    profile = _get_profile(request.user)
+
+    if request.method == 'POST':
+        duration_minutes = request.POST.get('duration_minutes', '').strip()
+        followup_text = request.POST.get('followup_text', '').strip()
+        analyst_name = request.POST.get('analyst_name', '').strip()
+
+        if not duration_minutes.isdigit() or int(duration_minutes) <= 0:
+            messages.error(request, 'Informe um tempo de vigência válido em minutos.')
+        elif not followup_text:
+            messages.error(request, 'Informe a resposta automática que será enviada ao GLPI.')
+        elif not analyst_name:
+            messages.error(request, 'Informe o nome do analista para atribuição automática.')
+        else:
+            try:
+                with GLPIClient() as client:
+                    user_match = client.find_user_by_name(analyst_name)
+            except GLPIError as exc:
+                messages.error(request, f'Falha ao localizar analista no GLPI: {exc}')
+            else:
+                active_until = timezone.now() + timedelta(minutes=int(duration_minutes))
+                AutoResponseRule.objects.create(
+                    problem_id_origem=problem_id,
+                    problem_title=problem.get('name', ''),
+                    analyst_name=user_match['login'],
+                    followup_text=followup_text,
+                    active_until=active_until,
+                    created_by=request.user,
+                    glpi_user_id=user_match['id'],
+                )
+                changed_fields = []
+                if profile.glpi_user_id != user_match['id']:
+                    profile.glpi_user_id = user_match['id']
+                    changed_fields.append('glpi_user_id')
+                if profile.glpi_analyst_name != user_match['login']:
+                    profile.glpi_analyst_name = user_match['login']
+                    changed_fields.append('glpi_analyst_name')
+                if changed_fields:
+                    profile.save(update_fields=changed_fields)
+                messages.success(request, 'Regra criada com sucesso.')
+                return redirect('configuracao_resposta_automatica')
+
+    return render(request, 'auto_response_rule_form.html', {
+        'problem': problem,
+        'default_analyst_name': profile.glpi_analyst_name or '',
+    })
+
+
+@login_required
+@require_POST
+def desativar_regra_resposta_automatica(request, rule_id):
+    rule = get_object_or_404(AutoResponseRule, pk=rule_id)
+    if not (request.user.is_superuser or rule.created_by_id == request.user.id):
+        return JsonResponse({'error': 'Sem permissão.'}, status=403)
+    rule.enabled = False
+    rule.save(update_fields=['enabled'])
+    return redirect('configuracao_resposta_automatica')
 
 
 @login_required

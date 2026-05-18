@@ -99,6 +99,11 @@
         color: #16a34a;
     }
 
+    .home-card-icon.red {
+        background: linear-gradient(135deg, #dc262622, #dc262644);
+        color: #dc2626;
+    }
+
     .home-card-title {
         font-size: 1.1rem;
         font-weight: 700;
@@ -173,6 +178,15 @@
             </div>
             <div class="home-card-title">Analytics</div>
             <div class="home-card-desc">Visualize indicadores e métricas de desempenho operacional</div>
+            <div class="home-card-arrow">Acessar <i class="fa fa-arrow-right"></i></div>
+        </a>
+
+        <a href="{% url 'configuracao_resposta_automatica' %}" class="home-card">
+            <div class="home-card-icon red">
+                <i class="fa fa-bolt"></i>
+            </div>
+            <div class="home-card-title">Configuração de Resposta Automática</div>
+            <div class="home-card-desc">Configure atribuição automática e followup para alertas recorrentes do GLPI</div>
             <div class="home-card-arrow">Acessar <i class="fa fa-arrow-right"></i></div>
         </a>
 
